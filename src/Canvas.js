@@ -1,23 +1,26 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { Stage } from "react-pixi-fiber";
-// import './Canvas.css';
+import React from 'react';
+import { Stage, Layer, Rect, Text } from 'react-konva';
+import Konva from 'konva';
 
-const height = 450;
-const width = 600;
-const OPTIONS = {
-  backgroundColor: 0x1099bb,
-  height: height,
-  width: width
-};
+export default function Canvas(props) {
+  const handleClick = (e) => {
+    console.log('click!', e);
+  }
 
-function Canvas() {
   return (
-    <div className="Canvas">
-      <Stage options={OPTIONS}>
-      </Stage>
-    </div>
-  );
+    <Stage width={window.innerWidth} height={window.innerHeight}>
+      <Layer>
+        <Text text="Try click on rect" />
+        <Rect
+          x={20}
+          y={20}
+          width={50}
+          height={50}
+          fill={'blue'}
+          shadowBlur={5}
+          onClick={handleClick}
+        />
+      </Layer>
+    </Stage>
+  )
 }
-
-export default Canvas;
