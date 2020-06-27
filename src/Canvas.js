@@ -1,44 +1,55 @@
-import React from 'react';
-import { Stage, Layer, Rect, Text } from 'react-konva';
+import React, { useState } from 'react';
+import { Stage, Layer, Rect, Text, Line } from 'react-konva';
 import Konva from 'konva';
 
-export default function Canvas(props) {
-  let timer;
+const INTERVAL = 10;
 
-  const handleHover = (e) => {
-    if (dragState) {
-      console.log(e);
-    }
-  }
+export default function Canvas(props) {
+  const [timer, setTimer] = useState(null);
+  const [drawPoints, setDrawPoints] = useState([]);
 
   const getPointerPosition = stage =>
-    setInterval(() => {
-      console.log(stage.getPointerPosition());
-    }, 10);
+    setTimer(
+      setInterval(() => {
+        const {x, y} = stage.getPointerPosition();
+        setDrawPoints(drawPoints => drawPoints.concat([x, y]));
+        console.log({x, y});
+      }, INTERVAL)
+    );
 
   const handleDragToggle = (e, isDragging = false) => {
+    // TODO: check for out of bounds dragging
     if (isDragging) {
       const stage = e.target.getStage();
-      timer = getPointerPosition(stage);
-      console.log(timer);
+      getPointerPosition(stage);
     } else {
       clearInterval(timer);
+      console.log('stop interval');
     }
   }
 
   return (
     <Stage width={window.innerWidth} height={window.innerHeight}>
-      <Layer>
-        <Text text="Try click on rect" />
+      <Layer
+        onMouseDown={e => handleDragToggle(e, true)}
+        onMouseUp={e => handleDragToggle(e, false)}
+      >
+        <Text text={drawPoints.join(', ')} />
         <Rect
           x={20}
           y={20}
-          width={150}
-          height={150}
-          fill={'blue'}
+          width={window.innerWidth - 40}
+          height={window.innerHeight - 40}
+          fill={'white'}
           shadowBlur={5}
-          onMouseDown={e => handleDragToggle(e, true)}
-          onMouseUp={e => handleDragToggle(e, false)}
+        />
+        <Line
+          points={drawPoints}
+          stroke={'red'}
+          strokeWidth={5}
+          lineCap={'round'}
+          lineJoin={'round'}
+          tension={0}
         />
       </Layer>
     </Stage>
