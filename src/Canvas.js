@@ -3,8 +3,27 @@ import { Stage, Layer, Rect, Text } from 'react-konva';
 import Konva from 'konva';
 
 export default function Canvas(props) {
-  const handleClick = (e) => {
-    console.log('click!', e);
+  let timer;
+
+  const handleHover = (e) => {
+    if (dragState) {
+      console.log(e);
+    }
+  }
+
+  const getPointerPosition = stage =>
+    setInterval(() => {
+      console.log(stage.getPointerPosition());
+    }, 10);
+
+  const handleDragToggle = (e, isDragging = false) => {
+    if (isDragging) {
+      const stage = e.target.getStage();
+      timer = getPointerPosition(stage);
+      console.log(timer);
+    } else {
+      clearInterval(timer);
+    }
   }
 
   return (
@@ -14,11 +33,12 @@ export default function Canvas(props) {
         <Rect
           x={20}
           y={20}
-          width={50}
-          height={50}
+          width={150}
+          height={150}
           fill={'blue'}
           shadowBlur={5}
-          onClick={handleClick}
+          onMouseDown={e => handleDragToggle(e, true)}
+          onMouseUp={e => handleDragToggle(e, false)}
         />
       </Layer>
     </Stage>
