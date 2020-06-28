@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Stage, Layer, Rect, Text, Line } from 'react-konva';
 import Konva from 'konva';
 
+const COLORS = ['red', 'blue', 'green', 'yellow'];
 const INTERVAL = 10;
 
 export default function Canvas(props) {
@@ -12,8 +13,14 @@ export default function Canvas(props) {
     setTimer(
       setInterval(() => {
         const {x, y} = stage.getPointerPosition();
-        setDrawPoints(drawPoints => drawPoints.concat([x, y]));
-        console.log({x, y});
+        setDrawPoints((drawPoints) => {
+          const lastLine = drawPoints[drawPoints.length - 1];
+          const newPoints = lastLine.points.concat([x, y]);
+          // replacing with a new array as opposed to using the original,
+          // to ensure that the reference is not mutated outside of the state hook
+          lastLine.points = newPoints;
+          return [ ...drawPoints ]; // return shallow clone
+        });
       }, INTERVAL)
     );
 
@@ -21,6 +28,13 @@ export default function Canvas(props) {
     // TODO: check for out of bounds dragging
     if (isDragging) {
       const stage = e.target.getStage();
+      // create a new line with color
+      setDrawPoints(drawPoints => drawPoints.concat([
+        {
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          points: []
+        }
+      ]));
       getPointerPosition(stage);
     } else {
       clearInterval(timer);
@@ -28,13 +42,14 @@ export default function Canvas(props) {
     }
   }
 
+  console.log(drawPoints);
+
   return (
     <Stage width={window.innerWidth} height={window.innerHeight}>
       <Layer
         onMouseDown={e => handleDragToggle(e, true)}
         onMouseUp={e => handleDragToggle(e, false)}
       >
-        <Text text={drawPoints.join(', ')} />
         <Rect
           x={20}
           y={20}
@@ -43,14 +58,17 @@ export default function Canvas(props) {
           fill={'white'}
           shadowBlur={5}
         />
-        <Line
-          points={drawPoints}
-          stroke={'red'}
-          strokeWidth={5}
-          lineCap={'round'}
-          lineJoin={'round'}
-          tension={0}
-        />
+        { drawPoints.map(line => (
+          <Line
+            points={line.points}
+            stroke={line.color}
+            strokeWidth={5}
+            lineCap={'round'}
+            lineJoin={'round'}
+            tension={1}
+          />
+        )) }
+
       </Layer>
     </Stage>
   )
