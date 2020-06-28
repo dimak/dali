@@ -3,13 +3,14 @@ import { Stage, Layer, Rect, Text, Line, Circle } from 'react-konva';
 import throttle from 'lodash.throttle';
 import Konva from 'konva';
 
-const COLORS = ['red', 'blue', 'green', 'yellow'];
 const INTERVAL = 20;
 
-export default function Canvas(props) {
+export default function Easel({ width, height, bgColor }) {
+  console.log(width, height);
   const [currentLine, setCurrentLine] = useState(null);
   const [previousLines, setPreviousLines] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [wentOutOfBounds, setWentOutOfBounds] = useState(false);
 
   const handleMouseDown = (e) => {
     setIsDrawing(true);
@@ -41,18 +42,33 @@ export default function Canvas(props) {
     }
   }, INTERVAL)
 
-  const handleMouseEnter = (e) => {
-    console.log(e);
+  const handleMouseLeave = (e) => {
+    console.log('left canvas');
+    setWentOutOfBounds(true);
+    handleMouseUp(e);
+  }
 
-    if(e.evt.buttons === 1) { // left click is currently pressed
-      handleMouseDown(e);
+  const handleMouseEnter = (e) => {
+    console.log('leftCanvas?', wentOutOfBounds);
+    if (wentOutOfBounds) {
+      setWentOutOfBounds(false);
+      if(e.evt.buttons === 1) { // left click is currently pressed
+        handleMouseDown(e);
+      }
     }
   }
   // console.log(currentLine);
 
-  const drawLine = (line) => {
+  /**
+   * will draw a line or circle, depending on how many points are available
+   * @param {Object} line meta data about a stroke
+   * @param {String|Number} key unique identifier for JSX rendering
+   * @return {Node}
+   */
+  const drawLine = (line, key) => {
     let Component = Line;
     let props = {
+      key,
       points: line.points,
       stroke: line.color,
       strokeWidth: 5,
@@ -73,28 +89,27 @@ export default function Canvas(props) {
   }
 
   return (
-    <Stage width={window.innerWidth} height={window.innerHeight}>
+    <Stage className="canvas" width={width} height={height}>
       <Layer
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleThrottledMouseMove}
         onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
       >
         <Rect
-          x={20}
-          y={20}
-          width={window.innerWidth - 40}
-          height={window.innerHeight - 40}
-          fill={'white'}
-          shadowBlur={5}
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill={bgColor}
         />
 
         {/* old lines */}
-        { previousLines.map(line => drawLine(line)) }
+        { previousLines.map((line, i) => drawLine(line, i)) }
 
         {/* current line */}
-        { currentLine && drawLine(currentLine) }
+        { currentLine && drawLine(currentLine, previousLines.length) }
       </Layer>
     </Stage>
   )

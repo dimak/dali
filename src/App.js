@@ -1,12 +1,11 @@
 import React from 'react';
-import logo from './logo.svg';
-import Canvas from './Canvas';
+import PaintUI from './components/paintUI';
 import './App.scss';
 
 function App() {
   return (
     <div className="App">
-      <Canvas />
+      <PaintUI />
     </div>
   );
 }
