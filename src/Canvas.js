@@ -1,85 +1,85 @@
 import React, { useState } from 'react';
-import { Stage, Layer, Rect, Text, Line } from 'react-konva';
+import { Stage, Layer, Rect, Text, Line, Circle } from 'react-konva';
+import throttle from 'lodash.throttle';
 import Konva from 'konva';
 
 const COLORS = ['red', 'blue', 'green', 'yellow'];
 const INTERVAL = 20;
 
 export default function Canvas(props) {
-  const [timer, setTimer] = useState(null);  // does not need to be a hook
   const [currentLine, setCurrentLine] = useState(null);
   const [previousLines, setPreviousLines] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
 
-  const startDrawing = (stage) => {
-    console.log('start');
+  const handleMouseDown = (e) => {
+    setIsDrawing(true);
 
-    // clear an old timer, if one exists for any reason
-    stopDrawing();
-
-    const newTimer = setInterval(() => {
-      const { x, y } = stage.getPointerPosition(); // gives x, y coords from the stage
-
-
-      setCurrentLine((currentLine) => {
-        // only add a new point if the user actually moved the mouse
-        const [prevX, prevY] = currentLine.points.slice(-2);
-
-        return prevX === x && prevY === y ?
-          currentLine :
-          { ...currentLine, points: currentLine.points.concat([x, y]) }
-      });
-    }, INTERVAL);
-
-    setTimer(newTimer);
+    const { layerX, layerY } = e.evt
+    setCurrentLine({
+      color: '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16),
+      points: [layerX, layerY],
+    });
   }
 
-  const stopDrawing = () => {
-    if(timer) {
-      console.log('stop');
+  // cleanup
+  const handleMouseUp = (e) => {
+    setIsDrawing(false);
+    if (currentLine) {
       setPreviousLines(previousLines.concat([currentLine]));
-      clearInterval(timer);
-      setTimer(null);
-      setCurrentLine(null);
-      console.log(previousLines);
     }
+    setCurrentLine(null);
   }
 
-  const handleDragToggle = (e, isDrawing = false) => {
-    // TODO: check for out of bounds dragging
+  const handleThrottledMouseMove = throttle((e) => {
     if (isDrawing) {
-      const stage = e.target.getStage();
-      // create a new line with color
-      setCurrentLine({
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        points: []
-      });
-      startDrawing(stage);
-    } else {
-      stopDrawing();
+      const { layerX, layerY } = e.evt; // gives x, y coords from the stage
+
+      setCurrentLine(currentLine =>
+        ({ ...currentLine, points: currentLine.points.concat([layerX, layerY]) })
+      );
+      console.log(currentLine);
     }
-  }
+  }, INTERVAL)
 
   const handleMouseEnter = (e) => {
+    console.log(e);
+
     if(e.evt.buttons === 1) { // left click is currently pressed
-      const stage = e.target.getStage();
-      // create a new line with color
-      const { x, y } = stage.getPointerPosition()
-      setCurrentLine({
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        points: [x, y]
-      });
-      startDrawing(stage);
+      handleMouseDown(e);
     }
   }
   // console.log(currentLine);
 
+  const drawLine = (line) => {
+    let Component = Line;
+    let props = {
+      points: line.points,
+      stroke: line.color,
+      strokeWidth: 5,
+      lineCap: 'round',
+      lineJoin: 'round',
+      tension: 1,
+      onMouseEnter: (e) => { e.cancelBubble = true },
+    };
+
+    if (line.points.length === 2) {
+      Component = Circle;
+      delete props.points;
+      props.x = line.points[0];
+      props.y = line.points[1];
+    }
+
+    return (<Component {...props} />);
+  }
+
   return (
     <Stage width={window.innerWidth} height={window.innerHeight}>
       <Layer
-        onMouseDown={e => handleDragToggle(e, true)}
-        onMouseUp={e => handleDragToggle(e, false)}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleThrottledMouseMove}
         onMouseEnter={handleMouseEnter}
-        onMouseLeave={e => stopDrawing()}
+        onMouseLeave={handleMouseUp}
       >
         <Rect
           x={20}
@@ -91,27 +91,10 @@ export default function Canvas(props) {
         />
 
         {/* old lines */}
-        { previousLines.map(line => (
-          <Line
-            points={line.points}
-            stroke={line.color}
-            strokeWidth={5}
-            lineCap={'round'}
-            lineJoin={'round'}
-            tension={1}
-          />
-        )) }
+        { previousLines.map(line => drawLine(line)) }
 
         {/* current line */}
-        { currentLine && (<Line
-            points={currentLine.points}
-            stroke={currentLine.color}
-            strokeWidth={5}
-            lineCap={'round'}
-            lineJoin={'round'}
-            tension={1}
-          />)
-        }
+        { currentLine && drawLine(currentLine) }
       </Layer>
     </Stage>
   )
