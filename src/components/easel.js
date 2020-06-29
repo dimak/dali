@@ -1,23 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Stage, Layer, Rect, Text, Line, Circle } from 'react-konva';
 import throttle from 'lodash.throttle';
 import Konva from 'konva';
+import PaintUIContext from './paintUIContext';
 
 const INTERVAL = 20;
 
 export default function Easel({ width, height, bgColor }) {
-  console.log(width, height);
   const [currentLine, setCurrentLine] = useState(null);
   const [previousLines, setPreviousLines] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [wentOutOfBounds, setWentOutOfBounds] = useState(false);
+  const {
+    color,
+    mode,
+    brushWidth,
+  } = useContext(PaintUIContext);
 
   const handleMouseDown = (e) => {
     setIsDrawing(true);
 
     const { layerX, layerY } = e.evt
     setCurrentLine({
-      color: '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16),
+      color: mode ? color : bgColor,
+      brushWidth,
       points: [layerX, layerY],
     });
   }
@@ -43,13 +49,11 @@ export default function Easel({ width, height, bgColor }) {
   }, INTERVAL)
 
   const handleMouseLeave = (e) => {
-    console.log('left canvas');
     setWentOutOfBounds(true);
     handleMouseUp(e);
   }
 
   const handleMouseEnter = (e) => {
-    console.log('leftCanvas?', wentOutOfBounds);
     if (wentOutOfBounds) {
       setWentOutOfBounds(false);
       if(e.evt.buttons === 1) { // left click is currently pressed
@@ -71,7 +75,7 @@ export default function Easel({ width, height, bgColor }) {
       key,
       points: line.points,
       stroke: line.color,
-      strokeWidth: 5,
+      strokeWidth: line.brushWidth,
       lineCap: 'round',
       lineJoin: 'round',
       tension: 1,
