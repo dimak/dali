@@ -13,11 +13,14 @@ import {
 import { withRouter } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
 import { doFetch } from '../util/api';
+import { cookieProps, USERNAME, ID } from '../util/cookies';
 
 import './login.scss';
 
 function Login({ history }) {
   const [mode, setMode] = useState(false);
+  const [cookies, setCookies] = useCookies([USERNAME, ID]);
+  console.log(cookies);
   let form;
 
   const handleModeChange = (val) => {
@@ -35,6 +38,8 @@ function Login({ history }) {
         method: 'POST',
         body: JSON.stringify(form),
       });
+      setCookies(USERNAME, response.username, cookieProps);
+      setCookies(ID, response._id, cookieProps);
       history.push('/');
     } catch (e) {
       if (e.error) {

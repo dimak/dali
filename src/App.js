@@ -5,28 +5,36 @@ import {
   Route,
   Redirect,
 } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
 
+import { USERNAME } from './util/cookies';
 import Nav from './components/nav';
 import Login from './components/login';
+import Logout from './components/logout';
 import PaintUI from './components/paintUI';
 import Gallery from './components/gallery';
 
 import './App.scss';
 
 function App() {
+  const [cookies] = useCookies([USERNAME]);
+
   return (
     <Router>
-      <Nav />
+      <Nav username={cookies.username} />
       <div className="App">
         <Switch>
           <Route exact path="/">
-            <Gallery />
+            { cookies.username ? <Gallery /> : <Redirect to="/login" /> }
           </Route>
           <Route path="/login">
             <Login />
           </Route>
+          <Route path="/logout">
+            <Logout />
+          </Route>
           <Route path="/draw">
-            <PaintUI />
+            { cookies.username ? <PaintUI /> : <Redirect to="/login" /> }
           </Route>
           <Route>
             <Redirect to="/" />

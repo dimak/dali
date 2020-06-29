@@ -11,7 +11,7 @@ export const RouterLink = React.forwardRef((props, ref) => {
 
 export const NavLink = props => <Nav.Item componentClass={RouterLink} {...props} />;
 
-export default function(props) {
+export default function({ username }) {
   return (
     <Navbar className="navbar">
       <Navbar.Header>
@@ -22,9 +22,11 @@ export default function(props) {
           <NavLink to="/">Gallery</NavLink>
           <NavLink to="/draw">Create</NavLink>
         </Nav>
-        <Nav pullRight>
-          <NavLink>Logout</NavLink>
-        </Nav>
+        { username ?
+          (<Nav pullRight>
+            <NavLink to="/logout">Logout</NavLink>
+          </Nav>) : null 
+        }
       </Navbar.Body>
     </Navbar>
   )
