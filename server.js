@@ -10,14 +10,14 @@ const port = process.env.PORT || 3001;
 // establish DB connection
 api.connect();
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 // allowing for CORS for everything, from localhost
 // normally, there would be more restrictions here and would include the deployment server as well
 app.use(cors({
   origin: /^https?:\/\/localhost/
 }));
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // set up CRUD routes for REST api
 
@@ -41,7 +41,8 @@ app.delete('/api/art/:id', (req, res) => {
   res.send('Deleted');
 });
 
-app.get('/api/user/:username', api.createUser);
+app.post('/api/user/create', api.userCreate);
+app.post('/api/user/login', api.userLogin);
 
 app.get('/api/ping', api.ping);
 

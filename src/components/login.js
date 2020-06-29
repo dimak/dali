@@ -8,16 +8,39 @@ import {
   Toggle,
   ButtonToolbar,
   Button,
+  Alert,
 } from 'rsuite';
+import { withRouter } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
+import { doFetch } from '../util/api';
 
 import './login.scss';
 
-export default function(props) {
-  const [ mode, setMode ] = useState(false);
+function Login({ history }) {
+  const [mode, setMode] = useState(false);
+  let form;
 
-  const handleOnChange = (val) => {
-    console.log(val);
+  const handleModeChange = (val) => {
     setMode(val);
+  }
+
+  const recordFormData = (formValues) => {
+    form = formValues;
+  }
+
+  const handleSubmitForm = async () => {
+    const apiRoute = mode ? '/api/user/create' : '/api/user/login';
+    try {
+      const response = await doFetch(apiRoute, {
+        method: 'POST',
+        body: JSON.stringify(form),
+      });
+      history.push('/');
+    } catch (e) {
+      if (e.error) {
+        Alert.error(e.error);
+      }
+    }
   }
 
   return (
@@ -26,15 +49,15 @@ export default function(props) {
         <Toggle
           size="lg"
           defaultValue={mode}
-          onChange={handleOnChange}
+          onChange={handleModeChange}
           checkedChildren="New user"
           unCheckedChildren="Log in"
         />
       </div>
-      <Form layout="horizontal">
+      <Form layout="horizontal" onChange={recordFormData}>
         <FormGroup>
           <ControlLabel>Username:</ControlLabel>
-          <FormControl name="name" />
+          <FormControl name="username" />
         </FormGroup>
         <FormGroup>
           <ControlLabel>Password:</ControlLabel>
@@ -42,11 +65,16 @@ export default function(props) {
         </FormGroup>
         <FormGroup>
           <ButtonToolbar>
-            <Button appearance="primary">{ mode ? 'Create' : 'Log in' }</Button>
-            <Button appearance="default">Cancel</Button>
+            <Button
+              appearance="primary"
+              onClick={handleSubmitForm}>
+                { mode ? 'Create' : 'Log in' }
+            </Button>
           </ButtonToolbar>
         </FormGroup>
       </Form>
     </Panel>
   )
 };
+
+export default withRouter(Login);
