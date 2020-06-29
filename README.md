@@ -3,6 +3,7 @@
 ### MongoDB
 
 [Installation instructions](https://docs.mongodb.com/manual/installation/#mongodb-community-edition-installation-tutorials) for MongoDB across your systems.
+You will need to install the community edition of MongoDB for your system. After you've installed it, you will need to start it with the appropriate command listed below.
 
 ## Available Scripts
 
@@ -19,3 +20,7 @@ You will also see any lint errors in the console.
 ### `npm run start-api`
 
 Runs the server-api. Will operate on [http://localhost:3001](http://localhost:3001). This is where the REST api that communicates with MongoDB lives. **Note:** if you have `nodemon` installed, it will start the server in watch mode; if you do not, it will start the server just using `node`.
+
+### `npm run start-db`
+
+Will start and stop the MongoDB client.

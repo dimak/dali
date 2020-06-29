@@ -22,6 +22,7 @@
   "scripts": {
     "start": "react-scripts start",
     "start-api": "command -v nodemon >/dev/null 2>&1 && nodemon server.js || node server.js",
+    "start-db": "mongod --dbpath=data",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
