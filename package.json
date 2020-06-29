@@ -6,6 +6,8 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
     "konva": "^7.0.0",
     "lodash.throttle": "^4.1.1",
     "mongodb": "^3.5.9",
@@ -19,6 +21,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start-api": "command -v nodemon >/dev/null 2>&1 && nodemon server.js || node server.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
