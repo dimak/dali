@@ -1,6 +1,5 @@
 .easel {
   border: 2px dashed;
-  margin: 20px;
   position: relative;
 
   &:before {
@@ -16,5 +15,30 @@
     top: 0;
     right: 0;
     bottom: 0;
+  }
+}
+
+.toolbar {
+  .rs-control-label {
+    margin-right: 5px;
+  }
+
+  .rsuite-color-picker {
+    min-width: 50px;
+  }
+
+  .rs-btn-toggle.rs-btn-toggle-lg {
+    margin-top: 3px;
+    width: 75px;
+  }
+
+  // tweaks to make the ui work
+  .brush-size {
+    width: 200px;
+
+    .rs-slider {
+      margin-top: -12px;
+      margin-left: 80px;
+    }
   }
 }
