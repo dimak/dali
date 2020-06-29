@@ -1,18 +1,59 @@
-const MongoClient = require('mongodb').MongoClient;
-const assert = require('assert');
+import mongodb from 'mongodb';
+import md5 from 'md5';
+
+const { MongoClient } = mongodb;
 
 // Connection URL
-const url = 'mongodb://localhost:27017';
+const URL = 'mongodb://localhost:27017';
 
 // Database Name
-const dbName = 'myproject';
+const DB_NAME = 'DaliApp';
+const USER = 'User';
+const ART = 'Art';
 
-// Use connect method to connect to the server
-MongoClient.connect(url, function(err, client) {
-  assert.equal(null, err);
-  console.log("Connected successfully to server");
+// cached db vars
+let db;
+const COLLECTIONS = {
+  [USER]: null,
+  [ART]: null
+}
 
-  const db = client.db(dbName);
+async function connect() {
+  // Use connect method to connect to the server
+  const client = await MongoClient.connect(URL);
+  db = client.db(DB_NAME);
+  COLLECTIONS[USER] = db.collection(USER);
+  COLLECTIONS[ART] = db.collection(ART);
 
-  client.close();
-});
+  console.log('Connection to DB Client established');
+}
+
+function ping(req, res) {
+  // Use connect method to connect to the server
+  res.send(`We're connected to ${db.databaseName}`);
+}
+
+async function createUser(req, res) {
+  const { username } = req.params;
+  const collection = COLLECTIONS[USER];
+
+  // check if a user with that name already exists
+  const userExists = await collection.find({ username }).toArray();
+  console.log(userExists);
+  if (!userExists.length) {
+    const insertedUser = await COLLECTIONS[USER].insertOne({
+      _id: md5(username),
+      username,
+    });
+    res.json(insertedUser);
+  } else {
+    res.status(409);
+    res.json({ error: 'user already exists' });
+  }
+}
+
+export default {
+  connect,
+  ping,
+  createUser,
+}

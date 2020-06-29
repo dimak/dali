@@ -1,9 +1,14 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+
+import api from './api/index.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+// establish DB connection
+api.connect();
 
 // allowing for CORS for everything, from localhost
 // normally, there would be more restrictions here and would include the deployment server as well
@@ -35,5 +40,9 @@ app.post('/api/art', (req, res) => {
 app.delete('/api/art/:id', (req, res) => {
   res.send('Deleted');
 });
+
+app.get('/api/user/:username', api.createUser);
+
+app.get('/api/ping', api.ping);
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
