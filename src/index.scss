@@ -11,3 +11,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+// global overrides
+.rs-form-control-wrapper > .rs-input-number, .rs-form-control-wrapper > .rs-input {
+  width: 100% !important;
+}
