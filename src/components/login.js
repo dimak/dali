@@ -19,31 +19,34 @@ import './login.scss';
 
 function Login({ history }) {
   const [mode, setMode] = useState(false);
+  const [form, setForm] = useState();
   const [cookies, setCookies] = useCookies([USERNAME, ID]);
-  console.log(cookies);
-  let form;
 
   const handleModeChange = (val) => {
     setMode(val);
   }
 
-  const recordFormData = (formValues) => {
-    form = formValues;
+  const updateFormData = (form) => {
+    setForm(form);
   }
 
   const handleSubmitForm = async () => {
     const apiRoute = mode ? '/api/user/create' : '/api/user/login';
-    try {
-      const response = await doFetch(apiRoute, {
-        method: 'POST',
-        body: JSON.stringify(form),
-      });
-      setCookies(USERNAME, response.username, cookieProps);
-      setCookies(ID, response._id, cookieProps);
-      history.push('/');
-    } catch (e) {
-      if (e.error) {
-        Alert.error(e.error);
+    if (form && form.username && form.password) {
+      try {
+        const response = await doFetch(apiRoute, {
+          method: 'POST',
+          body: JSON.stringify(form),
+        });
+
+        // if log in or create user succeeds
+        setCookies(USERNAME, response.username, cookieProps);
+        setCookies(ID, response._id, cookieProps);
+        history.push('/');
+      } catch (e) {
+        if (e.error) {
+          Alert.error(e.error);
+        }
       }
     }
   }
@@ -59,7 +62,7 @@ function Login({ history }) {
           unCheckedChildren="Log in"
         />
       </div>
-      <Form layout="horizontal" onChange={recordFormData}>
+      <Form layout="horizontal" onChange={updateFormData}>
         <FormGroup>
           <ControlLabel>Username:</ControlLabel>
           <FormControl name="username" />
