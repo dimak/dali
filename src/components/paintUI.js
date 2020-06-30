@@ -9,6 +9,10 @@ import {
   Slider,
  } from 'rsuite';
 import ColorPicker from 'rsuite-color-picker';
+import { withRouter } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
+import { cookieProps, USERNAME, ID } from '../util/cookies';
+import { doFetch } from '../util/api';
 
 import PaintUIContext from './paintUIContext';
 import Easel from './easel';
@@ -22,6 +26,9 @@ export default function PaintUI() {
   const [color, setColor] = useState('#000000');
   const [mode, setMode] = useState(true);
   const [brushWidth, setBrushWidth] = useState(5);
+  const [cookies] = useCookies([ID]);
+  const [stage, setStage] = useState();
+  const startTime = new Date();
 
   useEffect(() => {
     // TODO: add window resize event tracking
@@ -43,6 +50,25 @@ export default function PaintUI() {
 
   const handleColorChange = (e) => {
     setColor(e.hex);
+  }
+
+  const handleSave = async (e) => {
+    const endTime = new Date();
+    const imageData = stage.toDataURL({ pixelRatio: 3 });
+    console.log(cookies);
+    const savedImage   = await doFetch('/api/art', {
+      method: 'POST',
+      body: JSON.stringify({
+        userId: cookies[ID],
+        startTime,
+        endTime,
+        imageData,
+      }),
+    })
+  }
+
+  const getStage = (stg) => {
+    setStage(stg);
   }
 
   return (
@@ -76,18 +102,22 @@ export default function PaintUI() {
               onChangeComplete={handleColorChange}
             />
           </FormGroup>
+          <FormGroup>
+            <Button onClick={handleSave}>Save creation</Button>
+          </FormGroup>
         </Form>
       </div>
       <div className="easel" ref={easelContainerRef}>
         <PaintUIContext.Provider value={{
           color,
           mode,
-          brushWidth
+          brushWidth,
         }}>
           <Easel
             width={easelDimensions.width}
             height={easelDimensions.height}
             bgColor={'#FFF'}
+            getStage={getStage}
           />
         </PaintUIContext.Provider>
       </div>

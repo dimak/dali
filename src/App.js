@@ -13,6 +13,7 @@ import Login from './components/login';
 import Logout from './components/logout';
 import PaintUI from './components/paintUI';
 import Gallery from './components/gallery';
+import GalleryImage from './components/galleryImage';
 
 import './App.scss';
 
@@ -26,6 +27,9 @@ function App() {
         <Switch>
           <Route exact path="/">
             { cookies.username ? <Gallery /> : <Redirect to="/login" /> }
+          </Route>
+          <Route path="/gallery/:id">
+            { cookies.username ? <GalleryImage /> : <Redirect to="/login" /> }
           </Route>
           <Route path="/login">
             <Login />

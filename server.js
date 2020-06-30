@@ -27,14 +27,10 @@ app.get('/api/art', (req, res) => {
 });
 
 // read one
-app.get('/api/art/:id', (req, res) => {
-  res.send({ id: +req.params.id, userId: 458430, thumb: '1234.png', points: [[]] });
-});
+app.get('/api/art/:id', api.artGet);
 
 // create
-app.post('/api/art', (req, res) => {
-  res.send('Created');
-});
+app.post('/api/art', api.artCreate);
 
 // remove
 app.delete('/api/art/:id', (req, res) => {

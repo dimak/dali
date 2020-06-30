@@ -1,12 +1,11 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Stage, Layer, Rect, Text, Line, Circle } from 'react-konva';
 import throttle from 'lodash.throttle';
-import Konva from 'konva';
 import PaintUIContext from './paintUIContext';
 
 const INTERVAL = 20;
 
-export default function Easel({ width, height, bgColor }) {
+export default function Easel({ width, height, bgColor, getStage }) {
   const [currentLine, setCurrentLine] = useState(null);
   const [previousLines, setPreviousLines] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -16,6 +15,11 @@ export default function Easel({ width, height, bgColor }) {
     mode,
     brushWidth,
   } = useContext(PaintUIContext);
+  let stageRef;
+
+  useEffect(() => {
+    getStage(stageRef.getStage());
+  }, []);
 
   const handleMouseDown = (e) => {
     setIsDrawing(true);
@@ -44,7 +48,6 @@ export default function Easel({ width, height, bgColor }) {
       setCurrentLine(currentLine =>
         ({ ...currentLine, points: currentLine.points.concat([layerX, layerY]) })
       );
-      console.log(currentLine);
     }
   }, INTERVAL)
 
@@ -61,7 +64,6 @@ export default function Easel({ width, height, bgColor }) {
       }
     }
   }
-  // console.log(currentLine);
 
   /**
    * will draw a line or circle, depending on how many points are available
@@ -93,7 +95,7 @@ export default function Easel({ width, height, bgColor }) {
   }
 
   return (
-    <Stage className="canvas" width={width} height={height}>
+    <Stage ref={ref => stageRef = ref } className="canvas" width={width} height={height}>
       <Layer
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
@@ -118,3 +120,11 @@ export default function Easel({ width, height, bgColor }) {
     </Stage>
   )
 }
+//
+// Easel.propTypes = {
+//
+// }
+//
+// Easel.defaulProps = {
+//   getStage: () => {},
+// }

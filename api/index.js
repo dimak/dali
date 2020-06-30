@@ -65,7 +65,7 @@ async function userLogin(req, res) {
     });
   } else {
     res.status(404);
-    res.json({ error: 'Username or incorrect is password' });
+    res.json({ error: 'Username or password is incorrect' });
   }
 }
 
@@ -73,28 +73,74 @@ async function userCreate(req, res) {
   const { username, password: rawPw } = req.body;
   const password = md5(rawPw);
 
-  console.log(username, password);
-
   const collection = COLLECTIONS[USER];
 
   // check if a user with that name already exists
   const userExists = await findUser({ username });
 
   if (!userExists) {
+    const id = md5(username);
     const insertedUser = await COLLECTIONS[USER].insertOne({
       _id: md5(username),
       username,
       password,
     });
+    const user = await findUser({ _id: id });
 
     res.status(201);
     res.json({
-      _id: insertedUser._id,
-      username: insertedUser.username,
+      _id: user._id,
+      username: user.username,
     });
   } else {
     res.status(409);
     res.json({ error: 'User already exists' });
+  }
+}
+
+async function artCreate(req, res) {
+  const { userId, startTime, endTime, imageData } = req.body;
+  const id = md5(userId + startTime);
+
+  const collection = COLLECTIONS[ART];
+  const existingArt = await collection.find({ _id: id }).toArray();
+  if (existingArt.length) {
+    await collection.deleteOne({ _id: id });
+  }
+
+  await collection.insertOne({
+    _id: id,
+    userId,
+    startTime,
+    endTime,
+    imageData,
+  });
+
+  const newArt = await collection.find({
+    _id: id,
+  }).toArray();
+
+  console.log(newArt);
+
+  res.status(201);
+  res.json({
+    _id: newArt[0]._id,
+    userId: newArt[0].userId,
+    startTime: newArt[0].startTime,
+    endTime: newArt[0].endTime,
+    imageData: newArt[0].imageData,
+  });
+}
+
+async function artGet(req, res) {
+  const { id } = req.params;
+  const collection = COLLECTIONS[ART];
+  const existingArt = await collection.find({ _id: id }).toArray();
+  if (existingArt.length) {
+    res.json(existingArt[0])
+  } else {
+    res.status(404);
+    res.json({ error: 'Art not found' });
   }
 }
 
@@ -103,4 +149,6 @@ export default {
   ping,
   userCreate,
   userLogin,
+  artCreate,
+  artGet,
 }
