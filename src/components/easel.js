@@ -1,26 +1,63 @@
 import React, { useState, useEffect, useContext } from 'react';
+import PropTypes from 'prop-types';
 import { Stage, Layer, Rect, Text, Line, Circle } from 'react-konva';
 import throttle from 'lodash.throttle';
 import PaintUIContext from './paintUIContext';
 
-const INTERVAL = 20;
+const INTERVAL = 10;
 
-export default function Easel({ width, height, bgColor, getStage }) {
+export default function Easel({ width, height, bgColor, provideExportHandler }) {
+  // points within the currently-drawn line
   const [currentLine, setCurrentLine] = useState(null);
+  // points that have been saved, once the mouse has been released
   const [previousLines, setPreviousLines] = useState([]);
+  // toggle to determine if the mouse is currently down or not
   const [isDrawing, setIsDrawing] = useState(false);
+  // used for literal edge handling: if the user continues to draw out of bounds
   const [wentOutOfBounds, setWentOutOfBounds] = useState(false);
+  // easel params determined by the parent ui
   const {
     color,
     mode,
     brushWidth,
   } = useContext(PaintUIContext);
+
+  // reference to the stage instance element
   let stageRef;
 
+  // update the handler when previousLines has been updated;
+  // otherwise, we'll have a stale reference to previousLines
   useEffect(() => {
-    getStage(stageRef.getStage());
-  }, []);
+    provideExportHandler(handleExport);
+  }, [previousLines]);
 
+  /**
+   * @typedef {Object} EaselExport
+   * @property {string} image base64 png export of the canvas
+   * @property {string} thumb base64 png thumbnail export of the canvas
+   * @property {string} retina base64 png retina export of the canvas
+   */
+
+  /**
+   * handle export and saving of the canvas data
+   * NOTE: this function will be invoked by a parent
+   * @return {EaselExport} the easel data that we want to store
+   */
+  const handleExport = () => {
+    const stage = stageRef.getStage();
+
+    return {
+      image: stage.toDataURL(),
+      thumb: stage.toDataURL({ pixelRatio: .5 }),
+      retina: stage.toDataURL({ pixelRatio: 2 }),
+      strokes: previousLines,
+    }
+  }
+
+  /**
+   * handle drawing start
+   * @param {Event} e
+   */
   const handleMouseDown = (e) => {
     setIsDrawing(true);
 
@@ -32,7 +69,10 @@ export default function Easel({ width, height, bgColor, getStage }) {
     });
   }
 
-  // cleanup
+  /**
+   * handle cleanup after drawing has stopped
+   * @param {Event} e
+   */
   const handleMouseUp = (e) => {
     setIsDrawing(false);
     if (currentLine) {
@@ -41,6 +81,11 @@ export default function Easel({ width, height, bgColor, getStage }) {
     setCurrentLine(null);
   }
 
+  /**
+   * record mouse movement if mouse is currently pressed, but throttled
+   * so that it doesn't overwhelm the browser
+   * @param {Event} e
+   */
   const handleThrottledMouseMove = throttle((e) => {
     if (isDrawing) {
       const { layerX, layerY } = e.evt; // gives x, y coords from the stage
@@ -51,11 +96,19 @@ export default function Easel({ width, height, bgColor, getStage }) {
     }
   }, INTERVAL)
 
+  /**
+   * handle mouse leaving the canvas; pretend the user stopped drawing
+   * @param {Event} e
+   */
   const handleMouseLeave = (e) => {
     setWentOutOfBounds(true);
     handleMouseUp(e);
   }
 
+  /**
+   * handle returning to the canvas; if the mouse button is pressed, start drawing
+   * @param {Event} e
+   */
   const handleMouseEnter = (e) => {
     if (wentOutOfBounds) {
       setWentOutOfBounds(false);
@@ -80,7 +133,7 @@ export default function Easel({ width, height, bgColor, getStage }) {
       strokeWidth: line.brushWidth,
       lineCap: 'round',
       lineJoin: 'round',
-      tension: 1,
+      tension: 0,
       onMouseEnter: (e) => { e.cancelBubble = true },
     };
 
@@ -120,11 +173,15 @@ export default function Easel({ width, height, bgColor, getStage }) {
     </Stage>
   )
 }
-//
-// Easel.propTypes = {
-//
-// }
-//
-// Easel.defaulProps = {
-//   getStage: () => {},
-// }
+
+Easel.propTypes = {
+  width: PropTypes.number.isRequired,
+  height: PropTypes.number.isRequired,
+  bgColor: PropTypes.string,
+  provideExportHandler: PropTypes.func,
+}
+
+Easel.defaulProps = {
+  bgColor: '#FFFFFF',
+  provideExportHandler: () => { console.log('provideExportHandler not provided')},
+}
