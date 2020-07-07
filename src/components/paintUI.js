@@ -22,13 +22,14 @@ import './paintUI.scss';
 
 export default function PaintUI() {
   let easelContainerRef = React.createRef();
-  const [easelDimensions, setEaselDimentions] = useState({});
+  const [easelDimensions, setEaselDimentions] = useState({ width: 0, height: 0 });
   const [color, setColor] = useState('#000000');
   const [mode, setMode] = useState(true);
   const [brushWidth, setBrushWidth] = useState(5);
   const [cookies] = useCookies([ID]);
   const [stage, setStage] = useState();
-  const startTime = new Date();
+  const [startTime] = useState(new Date());
+  const [exportHandler, setExportHandler] = useState(null);
 
   useEffect(() => {
     // TODO: add window resize event tracking
@@ -53,22 +54,32 @@ export default function PaintUI() {
   }
 
   const handleSave = async (e) => {
+    const {
+      image,
+      thumb,
+      retina,
+      strokes,
+    } = exportHandler();
     const endTime = new Date();
-    const imageData = stage.toDataURL({ pixelRatio: 3 });
-    console.log(cookies);
     const savedImage   = await doFetch('/api/art', {
       method: 'POST',
       body: JSON.stringify({
         userId: cookies[ID],
         startTime,
         endTime,
-        imageData,
+        imageData: {
+          original: image,
+          '2x': retina,
+          thumb,
+          strokes,
+        }
       }),
     })
   }
 
-  const getStage = (stg) => {
-    setStage(stg);
+  // grab the export handler from the child component
+  const getExportHandler = (fn) => {
+    setExportHandler(() => fn);
   }
 
   return (
@@ -117,7 +128,7 @@ export default function PaintUI() {
             width={easelDimensions.width}
             height={easelDimensions.height}
             bgColor={'#FFF'}
-            getStage={getStage}
+            provideExportHandler={getExportHandler}
           />
         </PaintUIContext.Provider>
       </div>
